@@ -21,6 +21,7 @@ function Deck() {
   const [deckId, setDeckId] = useState(null);
   const [cards, setCards] = useState([]);
   const [error, setError] = useState(null);
+  const [beingShuffled, setBeingShuffled] = useState(false);
 
   //Tip(Not TODO): Effect is for something user doesn't get involved
   useEffect(function fetchDeckIdWhenMounted() {
@@ -36,12 +37,20 @@ function Deck() {
     const response = await axios.get(`${BASE_URL}/${deckId}/draw/?count=1`);
     console.log(response.data);
     const card = response.data.cards[0];
-    if(response.data.success){
+    if (response.data.success) {
       setCards(c => [...c, card]);
     }
-    else{
+    else {
       setError(response.data.error);
     }
+  }
+
+  // Shuffle the drawn cards back into the deck
+  async function shuffle() {
+    setBeingShuffled(true);
+    await axios.get(`${BASE_URL}/${deckId}/shuffle`);
+    setCards([]);
+    setBeingShuffled(false);
   }
 
   // print out loading message at very first when there's no deck yet
@@ -53,7 +62,13 @@ function Deck() {
     <div className="Deck">
       <button className="gimmeCard" onClick={draw}>
         GIMME A CARD!
-      </button>
+      </button> <br />
+      {!beingShuffled &&
+        <button className="shuffle" onClick={shuffle}>
+          SHUFFLE
+        </button>}
+      {beingShuffled &&
+        <div>Deck is being shuffled...</div>}
       {error && <p>{error}</p>}
       <ul className="cards">
         {cards.map(c => <li key={c.code}><Card card={c} /></li>)}
